@@ -1,79 +1,10 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
-const TRACE_PATH =
-  "M0,70 L40,66 L80,72 L120,64 L160,70 L200,60 L240,68 L280,66 L320,70 L360,66";
-const ANIMATION_DURATION = 2600; // ms
-
 export default function LiveMonitorCard() {
-  const pathRef = useRef<SVGPathElement>(null);
-  const dotRef = useRef<SVGCircleElement>(null);
-  const [showVerdict, setShowVerdict] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [traceProgress, setTraceProgress] = useState(0);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) {
-      setReduceMotion(true);
-      setTraceProgress(1);
-      setShowVerdict(true);
-      return;
-    }
-
-    const path = pathRef.current;
-    const dot = dotRef.current;
-    if (!path || !dot) return;
-
-    const totalLength = path.getTotalLength();
-    let start: number | null = null;
-    let rafId: number;
-
-    function step(ts: number) {
-      if (!start) start = ts;
-      const t = Math.min((ts - start) / ANIMATION_DURATION, 1);
-      setTraceProgress(t);
-
-      const pt = path!.getPointAtLength(t * totalLength);
-      dot!.setAttribute("cx", String(pt.x));
-      dot!.setAttribute("cy", String(pt.y));
-
-      if (t < 1) {
-        rafId = requestAnimationFrame(step);
-      } else {
-        setShowVerdict(true);
-      }
-    }
-
-    // Small delay so the card is visible before the animation starts
-    const timeout = setTimeout(() => {
-      rafId = requestAnimationFrame(step);
-    }, 400);
-
-    return () => {
-      clearTimeout(timeout);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
-  // Build a stroke-dasharray / dashoffset to reveal the path progressively
-  const dashStyles = reduceMotion
-    ? {}
-    : {
-        strokeDasharray: 1000,
-        strokeDashoffset: 1000 - 1000 * traceProgress,
-      };
-
   return (
     <div className="relative rounded-[22px] bg-ink p-6 text-white shadow-[0_30px_60px_-25px_rgba(0,0,0,0.5)]">
       {/* Top row */}
       <div className="mb-1.5 flex items-center justify-between">
         <div className="inline-flex items-center gap-1.5 rounded-[20px] bg-white/12 px-2.5 py-1 text-[11px] text-white">
-          <span
-            className="pulse-dot h-1.5 w-1.5 rounded-full bg-[#4ADE80]"
-            style={{ animation: reduceMotion ? "none" : "pulse 1.6s infinite" }}
-          />
+          <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-[#4ADE80]" style={{ animation: "pulse 1.6s infinite" }} />
           Live feed
         </div>
         <div className="font-sans text-[12px] text-[#8A8A8A]">
@@ -100,37 +31,22 @@ export default function LiveMonitorCard() {
           <text x="6" y="34" fill="#6B7280" fontSize="9" fontFamily="Inter">8°C</text>
           <text x="6" y="108" fill="#6B7280" fontSize="9" fontFamily="Inter">2°C</text>
 
-          {/* Animated trace path */}
+          {/* Static trace path */}
           <path
-            ref={pathRef}
             fill="none"
             stroke="#FFE614"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            d={TRACE_PATH}
-            style={dashStyles}
+            d="M0,70 L40,66 L80,72 L120,64 L160,70 L200,60 L240,68 L280,66 L320,70 L360,66"
           />
-          {/* Traveling dot */}
-          <circle
-            ref={dotRef}
-            r="4"
-            fill="#FFE614"
-            cx={reduceMotion ? 360 : 0}
-            cy={reduceMotion ? 66 : 70}
-            style={{ opacity: traceProgress > 0 ? 1 : 0 }}
-          />
+          {/* Dot at end position (static for Phase 1) */}
+          <circle cx="360" cy="66" r="4" fill="#FFE614" />
         </svg>
       </div>
 
-      {/* Verdict chip — fades up on completion */}
-      <div
-        className="flex items-center gap-2.5 rounded-[12px] border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.12)] px-3.5 py-[11px] transition-all duration-500 ease-out"
-        style={{
-          opacity: showVerdict ? 1 : 0,
-          transform: showVerdict ? "translateY(0)" : "translateY(6px)",
-        }}
-      >
+      {/* Verdict chip (shown statically for Phase 1) */}
+      <div className="flex items-center gap-2.5 rounded-[12px] border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.12)] px-3.5 py-[11px]">
         <svg
           viewBox="0 0 24 24"
           fill="none"
