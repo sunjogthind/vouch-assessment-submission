@@ -1,9 +1,16 @@
 import Link from "next/link";
 
-const monitorLinks = [
+export type ConsoleTab =
+  | "live-shipments"
+  | "integrity-feed"
+  | "certificates"
+  | "trust-scored-carriers"
+  | "insurer-data-feed";
+
+const monitorLinks: { label: string; tab: ConsoleTab; icon: React.ReactNode }[] = [
   {
     label: "Live shipments",
-    active: true,
+    tab: "live-shipments",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -15,7 +22,7 @@ const monitorLinks = [
   },
   {
     label: "Integrity feed",
-    active: false,
+    tab: "integrity-feed",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M3 12h4l3 8 4-16 3 8h4" />
@@ -24,7 +31,7 @@ const monitorLinks = [
   },
   {
     label: "Certificates",
-    active: false,
+    tab: "certificates",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -34,9 +41,10 @@ const monitorLinks = [
   },
 ];
 
-const marketLinks = [
+const marketLinks: { label: string; tab: ConsoleTab; icon: React.ReactNode }[] = [
   {
     label: "Trust-scored carriers",
+    tab: "trust-scored-carriers",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M3 9 4 4h16l1 5" />
@@ -47,6 +55,7 @@ const marketLinks = [
   },
   {
     label: "Insurer data feed",
+    tab: "insurer-data-feed",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M12 2v20M2 12h20" />
@@ -55,7 +64,12 @@ const marketLinks = [
   },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  activeTab: ConsoleTab;
+  onTabChange: (tab: ConsoleTab) => void;
+}
+
+export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   return (
     <aside className="flex flex-col gap-[26px] bg-ink p-[22px_18px] text-white" aria-label="Console sidebar">
       {/* Brand */}
@@ -89,30 +103,36 @@ export default function Sidebar() {
           Monitor
         </p>
         {monitorLinks.map((link) => (
-          <a
-            key={link.label}
-            className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-[11px] py-[9px] text-[13.5px] ${
-              link.active
+          <button
+            key={link.tab}
+            onClick={() => onTabChange(link.tab)}
+            className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-[11px] py-[9px] text-left text-[13.5px] ${
+              activeTab === link.tab
                 ? "bg-white/10 font-medium text-white"
                 : "text-[#C9D4EC] hover:bg-white/5"
             }`}
           >
             <span className="h-4 w-4 shrink-0 opacity-85">{link.icon}</span>
             {link.label}
-          </a>
+          </button>
         ))}
 
         <p className="mb-2 ml-1 mt-[18px] text-[10.5px] uppercase tracking-[1px] text-grey">
           Marketplace
         </p>
         {marketLinks.map((link) => (
-          <a
-            key={link.label}
-            className="flex cursor-pointer items-center gap-2.5 rounded-lg px-[11px] py-[9px] text-[13.5px] text-[#C9D4EC] hover:bg-white/5"
+          <button
+            key={link.tab}
+            onClick={() => onTabChange(link.tab)}
+            className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-[11px] py-[9px] text-left text-[13.5px] ${
+              activeTab === link.tab
+                ? "bg-white/10 font-medium text-white"
+                : "text-[#C9D4EC] hover:bg-white/5"
+            }`}
           >
             <span className="h-4 w-4 shrink-0 opacity-85">{link.icon}</span>
             {link.label}
-          </a>
+          </button>
         ))}
       </nav>
 

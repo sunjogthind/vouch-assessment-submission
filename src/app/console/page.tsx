@@ -4,6 +4,11 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { SHIPMENTS, seriesFor } from "@/lib/shipments";
 import type { Shipment } from "@/lib/shipments";
 import Sidebar from "@/components/console/Sidebar";
+import type { ConsoleTab } from "@/components/console/Sidebar";
+import IntegrityFeedView from "@/components/console/views/IntegrityFeedView";
+import CertificatesView from "@/components/console/views/CertificatesView";
+import CarriersView from "@/components/console/views/CarriersView";
+import InsurerView from "@/components/console/views/InsurerView";
 import StatStrip from "@/components/console/StatStrip";
 import ShipmentTable from "@/components/console/ShipmentTable";
 import TempChart from "@/components/console/TempChart";
@@ -20,6 +25,9 @@ function makeLabels() {
 const LABELS = makeLabels();
 
 export default function ConsolePage() {
+  // Active tab
+  const [activeTab, setActiveTab] = useState<ConsoleTab>("live-shipments");
+
   // Shipment state — use a mutable copy so we can update status/temp
   const [shipments, setShipments] = useState<Shipment[]>(() =>
     SHIPMENTS.map((s) => ({ ...s }))
@@ -283,59 +291,81 @@ export default function ConsolePage() {
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-[240px_1fr]">
       <div className="hidden md:flex">
-        <Sidebar />
+        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
       <main className="max-h-screen overflow-y-auto bg-paper-2 px-4 py-5 sm:px-[30px] sm:py-6">
-        {/* Top bar */}
-        <div className="mb-[22px] flex flex-wrap items-end justify-between gap-3.5">
-          <div>
-            <h2 className="text-[22px] font-semibold">Live shipments</h2>
-            <p className="mt-0.5 text-[13px] text-grey">
-              Real-time temperature integrity across active loads. Select a
-              shipment to inspect.
-            </p>
-          </div>
-          <div className="rounded-lg border border-line bg-white px-3 py-[7px] font-mono text-[12px] text-grey">
-            Geotab feed · <b className="text-ink">{clock || "live"}</b>
-          </div>
-        </div>
+        {activeTab === "live-shipments" && (
+          <>
+            {/* Top bar */}
+            <div className="mb-[22px] flex flex-wrap items-end justify-between gap-3.5">
+              <div>
+                <h2 className="text-[22px] font-semibold">Live shipments</h2>
+                <p className="mt-0.5 text-[13px] text-grey">
+                  Real-time temperature integrity across active loads. Select a
+                  shipment to inspect.
+                </p>
+              </div>
+              <div className="rounded-lg border border-line bg-white px-3 py-[7px] font-mono text-[12px] text-grey">
+                Geotab feed · <b className="text-ink">{clock || "live"}</b>
+              </div>
+            </div>
 
-        <StatStrip alertCount={alertCount} certCount={certCount} />
+            <StatStrip alertCount={alertCount} certCount={certCount} />
 
-        <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[1.15fr_1fr]">
-          {/* Left column */}
-          <div className="flex flex-col gap-[18px]">
-            <ShipmentTable
-              shipments={shipments}
-              selected={selected}
-              onSelect={selectShipment}
-            />
-            <TempChart
-              selected={selected}
-              chartData={chartData}
-              fullSeries={fullSeries}
-              playing={playing}
-              completed={completed}
-              onPlay={onPlay}
-              onReset={onReset}
-              hint={hint}
-            />
-          </div>
+            <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[1.15fr_1fr]">
+              {/* Left column */}
+              <div className="flex flex-col gap-[18px]">
+                <ShipmentTable
+                  shipments={shipments}
+                  selected={selected}
+                  onSelect={selectShipment}
+                />
+                <TempChart
+                  selected={selected}
+                  chartData={chartData}
+                  fullSeries={fullSeries}
+                  playing={playing}
+                  completed={completed}
+                  onPlay={onPlay}
+                  onReset={onReset}
+                  hint={hint}
+                />
+              </div>
 
-          {/* Right column */}
-          <AgentFeed
-            events={events}
-            agentStatus={agentStatus}
-            agentStatusColor={agentStatusColor}
-            certEnabled={certEnabled}
-            onGenerateCert={onGenerateCert}
-          />
-        </div>
+              {/* Right column */}
+              <AgentFeed
+                events={events}
+                agentStatus={agentStatus}
+                agentStatusColor={agentStatusColor}
+                certEnabled={certEnabled}
+                onGenerateCert={onGenerateCert}
+              />
+            </div>
+          </>
+        )}
 
-        {/* Mobile back link */}
-        <div className="mt-6 text-center md:hidden">
-          <a href="/" className="text-[13px] text-grey hover:text-ink">
+        {activeTab === "integrity-feed" && <IntegrityFeedView />}
+        {activeTab === "certificates" && <CertificatesView />}
+        {activeTab === "trust-scored-carriers" && <CarriersView />}
+        {activeTab === "insurer-data-feed" && <InsurerView />}
+
+        {/* Mobile nav + back link */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-[13px] md:hidden">
+          {(["live-shipments", "integrity-feed", "certificates", "trust-scored-carriers", "insurer-data-feed"] as ConsoleTab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-lg px-3 py-1.5 ${
+                activeTab === tab
+                  ? "bg-ink text-white font-medium"
+                  : "text-grey hover:text-ink"
+              }`}
+            >
+              {tab.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+            </button>
+          ))}
+          <a href="/" className="text-grey hover:text-ink">
             ← Back to site
           </a>
         </div>
