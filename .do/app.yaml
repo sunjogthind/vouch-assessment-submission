@@ -1,0 +1,14 @@
+name: vouch-assessment-submission
+services:
+  - name: vouch
+    github:
+      repo: sunjogthind/vouch-assessment-submission
+      branch: main
+    build_command: npm install && npm run build
+    run_command: npm start
+    environment_slug: node-js
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    routes:
+      - path: /
